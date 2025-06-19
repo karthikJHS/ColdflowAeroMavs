@@ -2,7 +2,7 @@
 clear; clc; close all;
 
 % === Inputs ===
-rho = 1.2041;          % kg/m^3 (air at 20°C)
+rho = 1.2041;          % kg/m^3 (air at 20°C) This isnt accurate
 mu = 1.825e-5;         % Pa.s
 
 D_inch = 0.25;         % inches
