@@ -1,0 +1,35 @@
+component testy
+% Converging-Diverning Nozzle
+% Third try is the charm.
+% First I want to model the effect of a simple contracting nozzle on the gas
+
+nodes
+    A = foundation.gas.gas;
+end
+
+branches
+    mdot : A.mdot -> *;               % flow A ➜ *  (positive into *)
+end
+
+outputs
+    T = { 0 , 'N' };                  % thrust
+end
+
+parameters
+    A_t = {1e-4  , 'm^2'};            % throat area
+    A_i = {2e-4  , 'm^2'};            % inlet  area (for velocity)
+    p_a = {101325, 'Pa' };            % ambient / back-pressure
+end
+
+variables (access = Protected)
+    mdot = {0, 'kg/s'}; % Mass flow rate through Nozzle
+    T_A = {300, 'K'}; % Temperature at port A including choking effects
+    P_A = {101325, 'Pa'}; % Temperature at port A including choking effects
+end
+
+intermediates
+    % This should log the variables
+    log_T_A = simscape.function.logProtected(T_A/A.T_unit, 1);
+    log_p_A = simscape.function.logProtected(p_A/A.p_unit, 1);
+end
+

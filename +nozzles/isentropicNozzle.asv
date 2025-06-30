@@ -1,0 +1,63 @@
+component isentropicNozzle
+% Isentropic nozzle (ideal, one-stream, quasi-1-D)
+%   Port  A : foundation.gas.gas   (inlet)
+%   Output T : thrust [N]
+
+    nodes
+        A = foundation.gas.gas;
+    end
+
+    outputs
+        T = {0 , 'N'};
+    end
+
+    parameters
+        A_i = {1e-4  , 'm^2'};    % Inlet  area
+        A_t = {1e-4  , 'm^2'};    % Throat area
+        A_e = {1e-4  , 'm^2'};    % Exit   area
+        p_a = {101325, 'Pa' };    % Ambient pressure
+    end
+
+    variables
+        mdot  = {0.02   , 'kg/s'};    % ≃ choked mass flow
+        p_0   = {1e5    , 'Pa'   };   % stagnation pressure
+        T_0   = {300    , 'K'    };   % stagnation temperature
+        p_e   = {8e4    , 'Pa'   };   % exit static pressure
+        v_e   = {200    , 'm/s'  };   % exit velocity
+        rho_A = {1.2    , 'kg/m^3'};  % inlet density
+    end
+
+    branches
+        mdot : A.mdot -> *;
+    end
+
+    intermediates
+        k = A.cp_ref / A.cv_ref;  % Ratio of specific heats
+        R = A.R;                  % Specific gas constant
+    end
+
+    equations
+        % Density must be recalculated every time step
+        rho_A == A.p / (R * A.T);
+
+        % Stagnate Inlet conditions
+        %   v_i = mdot / (rho_A * A_i)
+        T_0 == A.T + mdot^2 / (2 * A.cp_ref * rho_A^2 * A_i^2);
+        p_0 == A.p * (T_0 / A.T)^(k / (k - 1));
+
+        % Choke the nozzle
+        mdot == A_t * p_0 * k * sqrt( (2 / (k + 1))^((k + 1) / (k - 1)) ...
+                                       / (k * R * T_0) );
+
+        % Relate areas to pres
+        A_t / A_e == ((k + 1) / 2)^(1 / (k - 1)) * (p_e / p_0)^(1 / k) * ...
+                     sqrt( (k + 1) / (k - 1) * (1 - (p_e / p_0)^((k - 1) / k)) );
+
+        % --- Exit velocity ---------------------------------------------------
+        v_e == sqrt( 2 * k / (k - 1) * R * T_0 * (1 - (p_e / p_0)^((k - 1) / k)) );
+
+        % --- Thrust ----------------------------------------------------------
+        T == mdot * v_e + (p_e - p_a) * A_e;
+
+    end
+end

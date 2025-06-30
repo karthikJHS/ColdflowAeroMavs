@@ -1,0 +1,43 @@
+component testy
+% Test Part 
+% My goal is to build smallest model which exhibits questionable behavior
+
+nodes
+    A = foundation.gas.gas;
+end
+
+branches
+    mdot : A.mdot -> *;
+end
+
+parameters
+    A_t = {1e-4  , 'm^2'};
+    A_A = {2e-4  , 'm^2'};
+end
+
+variables (Access = Protected)
+    mdot = {0, 'kg/s'}; % Mass flow rate through Nozzle
+end
+
+intermediates
+    % Thermodynamic properties
+    rho_A = A.p / A.R / A.T;
+    k = A.cp_ref / A.cv_ref;
+    a_A = sqrt(k * A.R * A.T);
+    
+    % Stagnation conditions
+    v_A = mdot / A_A / rho_A;
+    chk = (1+(k-1)/2*(v_A/a_A)^2)
+    p_0 = A.p*chk^(k/k-1);
+    T_0 = A.T*chk;
+
+    % Useful coefficient of gamma
+    ck = sqrt(k)*(2/(k+1))^((k+1)/2/(k-1));
+end
+
+equations
+    % Choked flow rate 
+    mdot == ck * A_t * p_0 / sqrt(A.R * A.T);
+end
+
+end

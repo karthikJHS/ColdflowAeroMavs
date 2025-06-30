@@ -1,0 +1,71 @@
+component isentropicCD
+% Ideal-gas converging–diverging nozzle (one-port, automatic choking)
+%   • Port  A — upstream gas
+%   • Mass exits to the implicit reference node (*)
+%   • Output T — gross thrust   [N]
+
+nodes
+    A = foundation.gas.gas;
+end
+
+branches
+    mdot : A.mdot -> *;               % flow A ➜ *  (positive into *)
+end
+
+outputs
+    T = { 0 , 'N' };                  % thrust
+end
+
+parameters
+    A_t = {1e-4  , 'm^2'};            % throat area
+    A_e = {1e-4  , 'm^2'};            % exit   area
+    A_i = {2e-4  , 'm^2'};            % inlet  area (for velocity)
+    p_a = {101325, 'Pa' };            % ambient / back-pressure
+end
+
+variables
+    mdot  = {0      , 'kg/s'};        % mass-flow to *
+    rho_A = {1      , 'kg/m^3'};      
+    T0    = {300    , 'K'   };        % stagnation T
+    p0    = {1e5    , 'Pa'  };        % stagnation p
+    pi    = {1      , '1'   };        % p_a / p0
+    md_ch = {0      , 'kg/s'};
+    md_un = {0      , 'kg/s'};
+    p_e   = {1e5    , 'Pa'  };
+    v_e   = {0      , 'm/s' };
+end
+
+intermediates
+    k       = A.cp_ref / A.cv_ref;              % γ
+    R       = A.R;
+    pi_crit = (2/(k+1))^(k/(k-1));              % 0.528 for γ=1.4
+end
+
+equations
+    %––– inlet thermodynamics –––––––––––––––––––––––––––––
+    rho_A == A.p / (R * A.T);
+    T0    == A.T + mdot^2 / (2*rho_A^2 * A_i^2 * A.cp_ref);
+    p0    == A.p * (T0/A.T)^(k/(k-1));
+
+    %––– mass-flow candidates ––––––––––––––––––––––––––––
+    pi    == p_a / p0;                          % only parameter + state
+
+    md_un ==  sign(A.p - p_a) * A_t * p0 / sqrt(R*T0) * ...
+              sqrt( 2*k/(k-1) * (pi^(2/k) - pi^((k+1)/k)) );
+
+    md_ch ==  A_t * p0 / sqrt(R*T0) * ...
+              k * (2/(k+1))^((k+1)/(2*(k-1)));
+
+    mdot  == (pi  > pi_crit)*md_un + ...
+             (pi <= pi_crit)*md_ch;
+
+    %––– exit section ––––––––––––––––––––––––––––––––––––
+    A_t / A_e == ((k + 1) / 2)^(1 / (k - 1)) * (p_e / p0)^(1 / k) * ...
+                     sqrt( (k + 1) / (k - 1) * (1 - (p_e / p0)^((k - 1) / k)) );
+
+    v_e == sqrt( 2 * k / (k - 1) * R * T0 * (1 - (p_e / p0)^((k - 1) / k)) );
+
+    %––– gross thrust ––––––––––––––––––––––––––––––––––––
+    T   == mdot * v_e + (p_e - p_a) * A_e;
+end
+end
