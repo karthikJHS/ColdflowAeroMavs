@@ -1,0 +1,75 @@
+component isentropicCD
+% Ideal-gas converging–diverging nozzle with automatic choking.
+%   Port  A  – upstream gas
+%   Port  B  – downstream gas
+%   Output T – gross thrust  [N]
+
+nodes
+    A = foundation.gas.gas;
+    B = foundation.gas.gas;
+end
+
+branches
+    mdot : A.mdot -> B.mdot;           % mass-flow (A ➜ B positive)
+end
+
+outputs
+    T = { 0 , 'N' };                   % ⬅ thrust output (was never dropped)
+end
+
+parameters
+    A_t = {1e-4 , 'm^2'};              % throat area
+    A_e = {1e-4 , 'm^2'};              % exit   area
+end
+
+variables                                   % ← all run-time symbols
+    mdot   = { 0    , 'kg/s'};          % actual mass-flow
+    rho_A  = { 1    , 'kg/m^3'};        % inlet density            (added)
+    T0     = { 300  , 'K'   };          % stagnation temperature
+    p0     = { 1e5  , 'Pa'  };          % stagnation pressure
+    M_A    = { 0    , '1'   };          % inlet Mach
+    M_e    = { 2    , '1'   };          % exit  Mach  (≥ 1)
+    pi     = { 1    , '1'   };          % p_B / p0
+    md_ch  = { 0    , 'kg/s'};          % choked candidate
+    md_un  = { 0    , 'kg/s'};          % un-choked candidate
+    p_e    = { 1e5  , 'Pa'  };          % exit static pressure
+    v_e    = { 0    , 'm/s' };          % exit velocity
+end
+
+intermediates
+    k       = A.cp_ref / A.cv_ref;                % γ
+    R       = A.R;                                % gas constant
+    pi_crit = (2/(k + 1))^(k/(k - 1));            % critical p-ratio
+end
+
+equations
+    %–––– Inlet state ––––
+    rho_A == A.p / (R * A.T);
+    M_A   == mdot / (rho_A * A_t) / sqrt(k*R*A.T);
+    T0    == A.T * (1 + (k - 1)/2 * M_A^2);
+    p0    == A.p * (T0 / A.T)^(k/(k - 1));
+
+    %–––– Candidate mass-flows ––––
+    pi    == B.p / p0;
+
+    md_un ==  sign(A.p - B.p) * ...
+              A_t * p0 / sqrt(R*T0) * ...
+              sqrt( 2*k/(k - 1) * (pi^(2/k) - pi^((k + 1)/k)) );
+
+    md_ch ==  A_t * p0 / sqrt(R*T0) * ...
+              k * (2/(k + 1))^((k + 1)/(2*(k - 1)));
+
+    mdot  == (pi >  pi_crit) * md_un + ...
+             (pi <= pi_crit) * md_ch;
+
+    %–––– Exit section ––––
+    A_e/A_t == 1/M_e * ...
+               ((2/(k + 1)) * (1 + (k - 1)/2 * M_e^2))^((k + 1)/(2*(k - 1)));
+
+    p_e  == p0 * (1 + (k - 1)/2 * M_e^2)^(-k/(k - 1));
+    v_e  == M_e * sqrt(k * R * T0);
+
+    %–––– Thrust ––––
+    T    == mdot * v_e + (p_e - B.p) * A_e;
+end
+end
