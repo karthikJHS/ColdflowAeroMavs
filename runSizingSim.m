@@ -3,10 +3,10 @@ model = 'SizingFlightModel';
 
 % Inputs
 g0 = 9.80665;
-dry_mass = 20;             % kg
-m_fuel = 5.0;              % kg
-TWR = 3.0;                 % dimensionless
-isp = 215;                 % s
+m_payload = 20;             % kg
+m_fuel = 4.6;              % kg
+TWR = 6.0;                 % dimensionless
+isp = 205;                 % s
 T_c = 3200;                % K
 gamma = 1.23;
 p_c = 520 * 6894.76;       % psi to Pa
@@ -17,15 +17,16 @@ r = 0.08;           % rocket radius in meters (0.16 m diameter / 2)
 M = 28.8e-3;        % kg/mol, molar mass of combustion gases
 
 % Derived
-m_payload = dry_mass;
-m_0 = m_payload + 1.15 * m_fuel;
+dry_mass = m_payload + 0.15 * m_fuel;
+m_0 = dry_mass + m_fuel;
 thrust = TWR * m_0 * g0;
 mdot = thrust / ve;
+mass_fraction = (m_0)/dry_mass;
 burn_time = m_fuel / mdot;
 
 % Display summary
-fprintf('Testing single config:\nFuel = %.2f kg, TWR = %.2f, mdot = %.3f kg/s, Burn = %.2f s\n', ...
-    m_fuel, TWR, mdot, burn_time);
+fprintf('Testing single config:\n Dry mass: %.2f kg, Fuel = %.2f kg, TWR = %.2f, mdot = %.3f kg/s, Burn = %.2f s\n', ...
+    dry_mass, m_fuel, TWR, mdot, burn_time);
 
 % Set up Simulink input
 simIn = Simulink.SimulationInput(model);
