@@ -1,16 +1,16 @@
-% Generate Test Condition
+% Generate Test Conditions
 r = (4*2.54/100);
 V_tank = r * (20*2.54/100);
 T = 298;
-x_test = 0.2
-% Refrence thermodynamic conditions
+x_test = 0.2;
+% Reference thermodynamic conditions
 rho_vap = py.CoolProp.CoolProp.PropsSI('D', 'T', T, 'Q', 1, 'NitrousOxide');
 rho_liq = py.CoolProp.CoolProp.PropsSI('D', 'T', T, 'Q', 0, 'NitrousOxide');
 u_liq = py.CoolProp.CoolProp.PropsSI('U', 'T', T, 'Q', 0, 'NitrousOxide');
 u_vap = py.CoolProp.CoolProp.PropsSI('U', 'T', T, 'Q', 1, 'NitrousOxide');
 % total conditions 
-m_tot = V_tank*(x_test/rho_vap + (1-x_test)/rho_liq)^(-1) 
-U_tot = ((1-x_test)*u_liq+x_test*u_vap)*m_tot
+m_tot = V_tank*(x_test/rho_vap + (1-x_test)/rho_liq)^(-1); 
+U_tot = ((1-x_test)*u_liq+x_test*u_vap)*m_tot;
 
 % Resduals anonymous function given U_tot m_tot and V_tank 
 residual_function = @(x) [(1-x(1)) * py.CoolProp.CoolProp.PropsSI('U', 'T', x(2), 'Q', 0, 'NitrousOxide') + x(1) * py.CoolProp.CoolProp.PropsSI('U', 'T', x(2), 'Q', 1, 'NitrousOxide')-U_tot/m_tot;

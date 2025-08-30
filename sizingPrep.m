@@ -12,13 +12,18 @@ p = arrayfun(@(T) py.CoolProp.CoolProp.PropsSI('P','T',T,'Q',0,'NitrousOxide'), 
 save('CoolPropLookup.mat', 'T_range', 'u_liq', 'u_vap', 'rho_liq', 'rho_vap', 'p');
 
 %% Generate Test Condition
+p_fill= 600*6894.76; % Fill Line Pressure (600 psi)
+p_amb = 101325;
 r = (4*2.54/100);
+L = 2*r;
+
+x_full = 0.12; % Assuming 12% Ullage @ Full Tank Capacity
 V_tank = r * (20*2.54/100);
 T = 298;
 x_test = 1.0;
 % total conditions 
 m_tot = V_tank*(x_test/py.CoolProp.CoolProp.PropsSI('D', 'T', T, 'Q', 1, 'NitrousOxide') + (1-x_test)/py.CoolProp.CoolProp.PropsSI('D', 'T', T, 'Q', 0, 'NitrousOxide'))^(-1); 
 U_tot = ((1-x_test)*py.CoolProp.CoolProp.PropsSI('U', 'T', T, 'Q', 0, 'NitrousOxide')+x_test*py.CoolProp.CoolProp.PropsSI('U', 'T', T, 'Q', 1, 'NitrousOxide'))*m_tot;
-
+mu = 1.48e-5; % Vapor Nitrous Dynamic Viscosity @ Standard Conditions
 
 
