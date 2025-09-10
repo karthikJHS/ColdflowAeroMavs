@@ -8,8 +8,10 @@ u_liq = arrayfun(@(T) py.CoolProp.CoolProp.PropsSI('U','T',T,'Q',0,'NitrousOxide
 u_vap = arrayfun(@(T) py.CoolProp.CoolProp.PropsSI('U','T',T,'Q',1,'NitrousOxide'), T_range);
 rho_liq = arrayfun(@(T) py.CoolProp.CoolProp.PropsSI('D','T',T,'Q',0,'NitrousOxide'), T_range);
 rho_vap = arrayfun(@(T) py.CoolProp.CoolProp.PropsSI('D','T',T,'Q',1,'NitrousOxide'), T_range);
+h_liq = arrayfun(@(T) py.CoolProp.CoolProp.PropsSI('H','T',T,'Q',0,'NitrousOxide'), T_range);
+h_vap = arrayfun(@(T) py.CoolProp.CoolProp.PropsSI('H','T',T,'Q',1,'NitrousOxide'), T_range);
 p = arrayfun(@(T) py.CoolProp.CoolProp.PropsSI('P','T',T,'Q',0,'NitrousOxide'), T_range);
-save('CoolPropLookup.mat', 'T_range', 'u_liq', 'u_vap', 'rho_liq', 'rho_vap', 'p');
+save('CoolPropLookup.mat', 'T_range', 'u_liq', 'u_vap', 'rho_liq', 'rho_vap', 'h_liq', 'h_vap', 'p');
 
 %% Generate Testing Conditions
 p_fill= 600*6894.76; % Fill Line Pressure (600 psi)
